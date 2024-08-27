@@ -68,7 +68,7 @@ public class BlockStateCacheImpl {
         if (newCache != null) {
             final BlockStateCacheAccess oldCache = LAST_CACHE.get();
             deduplicateCollisionShape(newCache, oldCache);
-            deduplicateRenderShapes(newCache, oldCache);
+            //deduplicateRenderShapes(newCache, oldCache);
             deduplicateFaceSturdyArray(newCache, oldCache);
             LAST_CACHE.set(null);
         }
@@ -92,31 +92,6 @@ public class BlockStateCacheImpl {
         newCache.setCollisionShape(dedupedCollisionShape);
     }
 
-    private static void deduplicateRenderShapes(
-            BlockStateCacheAccess newCache, @Nullable BlockStateCacheAccess oldCache
-    ) {
-        final VoxelShape newRenderShape = getRenderShape(newCache.getOcclusionShapes());
-        if (newRenderShape == null) {
-            return;
-        }
-        Pair<VoxelShape, VoxelShape[]> dedupedRenderShapes = null;
-        if (oldCache != null) {
-            final VoxelShape oldRenderShape = getRenderShape(oldCache.getOcclusionShapes());
-            if (VoxelShapeHash.INSTANCE.equals(newRenderShape, oldRenderShape)) {
-                dedupedRenderShapes = Pair.of(oldRenderShape, oldCache.getOcclusionShapes());
-            }
-        }
-        if (dedupedRenderShapes == null) {
-            // Who thought that this was a good interface for putIfAbsent…
-            Pair<VoxelShape, VoxelShape[]> newPair = Pair.of(newRenderShape, newCache.getOcclusionShapes());
-            dedupedRenderShapes = CACHE_PROJECT.putIfAbsent(newRenderShape, newPair);
-            if (dedupedRenderShapes == null) {
-                dedupedRenderShapes = newPair;
-            }
-        }
-        replaceInternals(dedupedRenderShapes.getLeft(), newRenderShape);
-        newCache.setOcclusionShapes(dedupedRenderShapes.getRight());
-    }
 
     private static void deduplicateFaceSturdyArray(
             BlockStateCacheAccess newCache, @Nullable BlockStateCacheAccess oldCache
